@@ -82,7 +82,6 @@ def analyze_stock(symbol):
             signal = "SELL"
             reason = f"Przecięcie średnich w dół"
 
-        # Sugerowana ilość akcji do zakupu
         max_alloc = INITIAL_CAPITAL * MAX_POSITION_PERCENT
         suggested_shares = int(max_alloc // current_price) if current_price > 0 else 0
         total_cost = round(suggested_shares * current_price, 2)
@@ -143,7 +142,7 @@ def send_discord_report(results, portfolio):
         "inline": False
     })
 
-    # --- SYGNAŁY KUPNA (Z ILOŚCIĄ SZTUK) ---
+    # --- SYGNAŁY KUPNA ---
     for item in buy_signals[:5]:
         fields.append({
             "name": f"🟢 KUPUJ: {item['ticker']}",
@@ -163,7 +162,10 @@ def send_discord_report(results, portfolio):
         })
 
     total_scanned = len([r for r in results if r])
+    
+    # Dodanie @everyone przed embedem, żeby pingować użytkowników
     payload = {
+        "content": "@everyone 🚨 Nowy raport giełdowy SIGG jest już dostępny!",
         "embeds": [{
             "title": "📊 SIGG Bot – Skaner Rynku i Portfel",
             "description": f"Przeskanowano **{total_scanned} spółek** z GPW.",
@@ -174,7 +176,7 @@ def send_discord_report(results, portfolio):
     }
 
     requests.post(DISCORD_WEBHOOK_URL, json=payload)
-    print(f"Wysłano raport! Przeskanowano {total_scanned} spółek.")
+    print(f"Wysłano raport z pingiem @everyone! Przeskanowano {total_scanned} spółek.")
 
 if __name__ == "__main__":
     print("Skanuję giełdę i obliczam portfel...")
