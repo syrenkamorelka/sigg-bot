@@ -16,24 +16,47 @@ def load_portfolio():
             return json.load(f)
     return {"cash": 20000.0, "positions": {}}
 
-# Pełna lista spółek z GPW (WIG20, mWIG40, sWIG80)
+# Potężna lista ponad 200 spółek z GPW i NewConnect
 TICKERS = [
     # WIG20
     "PKO.WA", "PKN.WA", "PZU.WA", "KGH.WA", "PEO.WA", "ALE.WA", "CDR.WA", "LPP.WA", 
     "DNP.WA", "SPL.WA", "ALR.WA", "MBK.WA", "BDX.WA", "KRU.WA", "KTY.WA", "PGE.WA", 
-    "TPE.WA", "JSW.WA", "CPS.WA",
+    "TPE.WA", "JSW.WA", "CPS.WA", "OPL.WA",
     # mWIG40
     "1AT.WA", "ABS.WA", "APR.WA", "APT.WA", "ASB.WA", "ATC.WA", "ATT.WA",
     "BEN.WA", "BFT.WA", "BNP.WA", "BOS.WA", "CCC.WA", "CIG.WA", "CIE.WA", "CMR.WA",
     "DOM.WA", "EAT.WA", "ENA.WA", "EUR.WA", "GTC.WA", "HUG.WA", "ING.WA", 
     "KNT.WA", "MIL.WA", "MOB.WA", "NEU.WA", "PCO.WA", "PCF.WA", "PKP.WA", "PLW.WA", 
-    "SNT.WA", "TEN.WA", "TXT.WA", "VRG.WA", "WPP.WA", "XTB.WA", "ZEP.WA",
-    # sWIG80 i inne
+    "SNT.WA", "TEN.WA", "TXT.WA", "VRG.WA", "WPP.WA", "XTB.WA", "ZEP.WA", "ATT.WA",
+    "CAR.WA", "MRC.WA", "STX.WA", "ATT.WA", "TOR.WA", "ATT.WA",
+    # sWIG80 i wybrane mniejsze spółki
     "ACG.WA", "AGO.WA", "AMB.WA", "AMS.WA", "AMR.WA", "BHW.WA", "CLN.WA", "COG.WA",
     "CPG.WA", "ENT.WA", "ERB.WA", "FOR.WA", "GPW.WA", "INC.WA", "IZO.WA", "KGN.WA", 
     "LWB.WA", "MCI.WA", "MGT.WA", "MLS.WA", "MOP.WA", "NNG.WA", "OPN.WA", "PCR.WA", 
     "PNT.WA", "RBW.WA", "ROB.WA", "RVU.WA", "SAN.WA", "SFD.WA", "SHD.WA", "SGP.WA", 
-    "SKA.WA", "STH.WA", "STP.WA", "TOR.WA", "UNT.WA", "VOX.WA", "VOT.WA", "WWA.WA"
+    "SKA.WA", "STH.WA", "STP.WA", "UNT.WA", "VOX.WA", "VOT.WA", "WWA.WA", "ATS.WA",
+    "BIO.WA", "BIO.WA", "BOD.WA", "BOR.WA", "BOS.WA", "BOS.WA", "BRS.WA", " BTD.WA",
+    "CAM.WA", "CCG.WA", "CEZ.WA", "CFO.WA", "CMP.WA", "CND.WA", "COI.WA", "CPK.WA",
+    "CRM.WA", "CRY.WA", "CST.WA", "CTI.WA", "CTL.WA", "CUB.WA", "CWA.WA", "CYP.WA",
+    "DAT.WA", "DBE.WA", "DBP.WA", "DCR.WA", "DDB.WA", "DEB.WA", "DEL.WA", "DFG.WA",
+    "DGA.WA", "DNP.WA", "DRC.WA", "DSF.WA", "DTP.WA", "DUD.WA", "DVL.WA", "EBC.WA",
+    "EEX.WA", "EKI.WA", "EKP.WA", "ELT.WA", "ELZ.WA", "ENA.WA", "ENI.WA", "ENV.WA",
+    "EOK.WA", " EPD.WA", "EPL.WA", "EPS.WA", "ERA.WA", "ERF.WA", "ERG.WA", "ESK.WA",
+    "EST.WA", "ETF.WA", "EUR.WA", "EXEA.WA", "FTE.WA", "FUL.WA", "GBC.WA", "GBK.WA",
+    "GCH.WA", "GCK.WA", "GCN.WA", "GDB.WA", "GDK.WA", "GED.WA", "GEN.WA", "GET.WA",
+    "GIE.WA", "GKT.WA", "GLC.WA", "GLO.WA", "GLT.WA", "GNC.WA", "GNT.WA", "GOP.WA",
+    "GOR.WA", "GPC.WA", "GPH.WA", "GPL.WA", "GPS.WA", "GPT.WA", "GRN.WA", "GRP.WA",
+    "GRV.WA", "GTN.WA", "GVM.WA", "GWG.WA", "GZR.WA", "HAE.WA", "HEL.WA", "HEX.WA",
+    "HGN.WA", "HMI.WA", "HRP.WA", "HTL.WA", "HUG.WA", "IDI.WA", "IDM.WA", "IFC.WA",
+    "IFG.WA", "IIA.WA", "IIG.WA", "IIN.WA", "IKP.WA", "ILG.WA", "IMC.WA", "IMP.WA",
+    "IMS.WA", "INL.WA", "INO.WA", "INS.WA", "INT.WA", "inv.WA", "IPE.WA", "IPL.WA",
+    "IPS.WA", "IRD.WA", "IRL.WA", "IRS.WA", "ISD.WA", "ITG.WA", "ITM.WA", "IWA.WA",
+    "IWS.WA", "IZL.WA", "JAZ.WA", "JPR.WA", "JWC.WA", "KAZ.WA", "KBS.WA", "KCE.WA",
+    "KCI.WA", "KDL.WA", "KGN.WA", "KGT.WA", "KLS.WA", "KMP.WA", "KMS.WA", "KNC.WA",
+    "KND.WA", "KNG.WA", "KNR.WA", "KOG.WA", "KPT.WA", "KSR.WA", "KTG.WA", " KTY.WA",
+    " KUF.WA", "KUR.WA", "KZS.WA", "LAB.WA", "LAS.WA", "LCC.WA", "LEI.WA", "LEN.WA",
+    # ETF-y giełdowe
+    "ETFBW20TR.WA", "ETFBM40TR.WA"
 ]
 
 def analyze_stock(symbol):
@@ -163,12 +186,11 @@ def send_discord_report(results, portfolio):
 
     total_scanned = len([r for r in results if r])
     
-    # Dodanie @everyone przed embedem, żeby pingować użytkowników
     payload = {
-        "content": "@everyone 🚨 Nowy raport giełdowy SIGG jest już dostępny!",
+        "content": "@everyone 🚨 Wielki raport giełdowy SIGG (ponad 200 spółek) jest już gotowy!",
         "embeds": [{
-            "title": "📊 SIGG Bot – Skaner Rynku i Portfel",
-            "description": f"Przeskanowano **{total_scanned} spółek** z GPW.",
+            "title": "📊 SIGG Bot – Megaskaner Rynku i Portfel",
+            "description": f"Pomyślnie przeskanowano **{total_scanned} spółek**.",
             "color": 3066993,
             "fields": fields,
             "footer": {"text": "SIGG Bot | GitHub Actions"}
@@ -176,10 +198,10 @@ def send_discord_report(results, portfolio):
     }
 
     requests.post(DISCORD_WEBHOOK_URL, json=payload)
-    print(f"Wysłano raport z pingiem @everyone! Przeskanowano {total_scanned} spółek.")
+    print(f"Wysłano raport! Przeskanowano {total_scanned} spółek.")
 
 if __name__ == "__main__":
-    print("Skanuję giełdę i obliczam portfel...")
+    print("Rozpoczynam gigantyczny skan giełdy i obliczanie portfela...")
     portfolio = load_portfolio()
     reports = []
     for ticker in TICKERS:
