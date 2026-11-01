@@ -38,8 +38,9 @@ def analyze_stock(symbol):
     try:
         url = f"https://stooq.pl/q/d/l/?s={symbol.lower()}.pl&i=d"
         headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers, timeout=5)
-
+        # Krótki timeout (3 sekundy), żeby skrypt nigdy nie utknął
+        response = requests.get(url, headers=headers, timeout=3)
+        
         if response.status_code != 200 or len(response.text) < 50:
             return None
 
@@ -53,7 +54,7 @@ def analyze_stock(symbol):
         close_prices = df["Zamkniecie"]
         rsi_int = RSIIndicator(close=close_prices, window=14)
         df["RSI"] = rsi_int.rsi()
-
+        
         sma_short = SMAIndicator(close=close_prices, window=10)
         sma_long = SMAIndicator(close=close_prices, window=30)
         df["SMA10"] = sma_short.sma_indicator()
@@ -61,10 +62,10 @@ def analyze_stock(symbol):
 
         latest = df.iloc[-1]
         prev = df.iloc[-2]
-
+        
         current_price = round(float(latest["Zamkniecie"]), 2)
         rsi = round(float(latest["RSI"]), 2)
-
+        
         signal = "HOLD"
         reason = "Brak silnego sygnału"
 
@@ -121,7 +122,7 @@ def send_discord_report(results):
 
     total_scanned = len([r for r in results if r])
     desc = f"Przeskanowano **{total_scanned} spółek** z polskiej giełdy (GPW) dla budżetu **{INITIAL_CAPITAL} PLN**.\n"
-
+    
     if not buy_signals and not sell_signals:
         desc += "ℹ️ *Brak skrajnych sygnałów (RSI < 35 lub > 70). Rynek w fazie konsolidacji.*"
         color = 3447003 
@@ -130,11 +131,11 @@ def send_discord_report(results):
 
     payload = {
         "embeds": [{
-            "title": "📊 SIGG Bot – Skaner Rynku GPW (Render)",
+            "title": "📊 SIGG Bot – Skaner Rynku GPW (GitHub Actions)",
             "description": desc,
             "color": color,
             "fields": fields,
-            "footer": {"text": "SIGG Signal Bot | Chmura Render"}
+            "footer": {"text": "SIGG Signal Bot | Chmura GitHub"}
         }]
     }
 
@@ -142,11 +143,11 @@ def send_discord_report(results):
     print(f"Zakończono! Przeskanowano {total_scanned} spółek i wysłano raport.")
 
 if __name__ == "__main__":
-    print("Skanuję polską giełdę na Renderze...")
+    print("Skanuję polską giełdę na GitHubie...")
     reports = []
     for ticker in TICKERS:
         res = analyze_stock(ticker)
         if res:
             reports.append(res)
-
+            
     send_discord_report(reports)
