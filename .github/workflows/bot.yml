@@ -2,7 +2,7 @@ name: SIGG Stock Bot
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # Uruchamia się codziennie o 14:00 UTC (15:00 czasu polskiego)
+    - cron: '0 12 * * *'  # Uruchamia się codziennie o 13:00 UTC (13:00 czasu polskiego)
   workflow_dispatch:      # Pozwala też włączyć bota ręcznie jednym kliknięciem
 
 jobs:
