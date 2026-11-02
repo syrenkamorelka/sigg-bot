@@ -1,4 +1,9 @@
 {
-  "cash": 20000.0,
-  "positions": {}
+  "cash": 8277.80,
+  "holdings": [
+    { "ticker": "JSW.WA", "shares": 114, "buy_price": 26.20 },
+    { "ticker": "PGE.WA", "shares": 188, "buy_price": 15.85 },
+    { "ticker": "KGHM.WA", "shares": 10, "buy_price": 282.00 },
+    { "ticker": "PZU.WA", "shares": 41, "buy_price": 71.60 }
+  ]
 }
