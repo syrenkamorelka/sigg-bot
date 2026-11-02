@@ -190,7 +190,7 @@ def run_bot_analysis():
         message += "🌍 **Skaner Rynku (Wybrane spółki):**\n"
         for mh in market_highlights:
             m_icon = "📈" if mh['change'] >= 0 else "📉"
-            message += f"{m_icon} `{mh['ticker']}`: {mh['price']:.2f} PLN ({mh['change']+.2f}%)\n"
+            message += f"{m_icon} `{mh['ticker']}`: {mh['price']:.2f} PLN ({mh['change']:.2f}%)\n"
 
     message += "\n═══════════════════════════════\n"
     message += "⚡ *Bot wygenerowany automatycznie przez system SIGG Automation*"
