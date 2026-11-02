@@ -3,22 +3,21 @@
   "positions": {
     "PGE": {
       "shares": 188,
-      "buy_price": 15.75
+      "buy_price": 15.85
     },
     "PZU": {
       "shares": 41,
-      "buy_price": 71.05
+      "buy_price": 71.60
     },
     "JSW": {
       "shares": 114,
-      "buy_price": 26.15
+      "buy_price": 26.20
     },
     "KGHM": {
       "shares": 10,
-      "buy_price": 281.60
+      "buy_price": 282.00
     }
   }
 }
-
 
 
