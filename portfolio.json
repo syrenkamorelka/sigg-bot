@@ -1,10 +1,11 @@
 {
   "cash": 8277.80,
-  "positions": [
-    { "ticker": "JSW.WA", "shares": 114, "buy_price": 26.20 },
-    { "ticker": "PGE.WA", "shares": 188, "buy_price": 15.85 },
-    { "ticker": "KGHM.WA", "shares": 10, "buy_price": 282.00 },
-    { "ticker": "PZU.WA", "shares": 41, "buy_price": 71.60 }
-  ]
+  "positions": {
+    "JSW.WA": { "shares": 114, "buy_price": 26.20 },
+    "PGE.WA": { "shares": 188, "buy_price": 15.85 },
+    "KGHM.WA": { "shares": 10, "buy_price": 282.00 },
+    "PZU.WA": { "shares": 41, "buy_price": 71.60 }
+  }
 }
+
 
