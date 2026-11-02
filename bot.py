@@ -20,7 +20,7 @@ def load_portfolio():
   return {"cash": 20000.0, "positions": {}}
 
 
-# Potężna lista ponad 200 spółek z GPW i NewConnect
+# Pełna, gigantyczna lista ponad 200 spółek z GPW i NewConnect do skanowania rynku
 TICKERS = [
     # WIG20
     "PKO.WA",
@@ -348,12 +348,13 @@ def send_discord_report(results, portfolio):
 
   fields = []
 
-  # --- PORTFEL ---
+  # --- PORTFEL I OCENA TWOICH POZYCJI ---
   cash = portfolio["cash"]
   positions = portfolio["positions"]
 
   total_stocks_value = 0
   portfolio_details = ""
+  portfolio_sell_alerts = []
 
   if not positions:
     portfolio_details = "Brak otwartych pozycji (całość w gotówce)."
@@ -362,9 +363,10 @@ def send_discord_report(results, portfolio):
       shares = data["shares"]
       buy_price = data["buy_price"]
 
-      current_price = next(
-          (r["price"] for r in results if r["ticker"] == ticker), buy_price
-      )
+      # Szukamy najnowszej ceny z przeskanowanych wyników giełdowych
+      res = next((r for r in results if r["ticker"] == ticker), None)
+      current_price = res["price"] if res else buy_price
+
       position_value = shares * current_price
       total_stocks_value += position_value
 
@@ -376,10 +378,21 @@ def send_discord_report(results, portfolio):
       )
 
       emoji = "🟢" if profit_loss >= 0 else "🔴"
+      signal_text = ""
+
+      if res:
+        if res["signal"] == "SELL":
+          signal_text = f" 🚨 **UWAGA (Sprzedaż):** {res['reason']}"
+          portfolio_sell_alerts.append(
+              f"• **{ticker}**: {res['reason']} | Akt: {current_price} PLN"
+          )
+        elif res["signal"] == "BUY":
+          signal_text = f" 💡 *Sygnał dokupienia: {res['reason']}*"
+
       portfolio_details += (
           f"**{ticker}**: {shares} szt. | Zakup: {buy_price} PLN | Akt:"
           f" {current_price} PLN\n{emoji} Wynik: **{profit_loss:+.2f} PLN"
-          f" ({profit_loss_pct:+.2f}%)**\n\n"
+          f" ({profit_loss_pct:+.2f}%)**{signal_text}\n\n"
       )
 
   total_portfolio_value = cash + total_stocks_value
@@ -393,26 +406,32 @@ def send_discord_report(results, portfolio):
       f"💰 **Całkowity kapitał:** {total_portfolio_value:,.2f} PLN\n"
       f"📊 **Całkowity wynik:** **{total_profit_loss:+,.2f} PLN"
       f" ({total_profit_loss_pct:+.2f}%)**\n\n"
-      f"**Posiadane akcje:**\n{portfolio_details}",
+      f"**Twoje akcje:**\n{portfolio_details}",
       "inline": False,
   })
 
-  # --- SYGNAŁY KUPNA ---
-  for item in buy_signals[:5]:
+  # Jeśli coś z Twojego portfela ma sygnał sprzedaży, pokaże się osobny alarm
+  if portfolio_sell_alerts:
     fields.append({
-        "name": f"🟢 KUPUJ: {item['ticker']}",
-        "value": f"**Cena:** {item['price']} PLN | **RSI:** {item['rsi']}\n"
-        f"**Sugerowana ilość:** {item['shares']} szt. (~{item['total_cost']}"
-        f" PLN)\n"
-        f"**Powód:** {item['reason']}",
+        "name": "⚠️ ALARM: Sygnały Sprzedaży na Twoich Akcjach!",
+        "value": "\n".join(portfolio_sell_alerts),
         "inline": False,
     })
 
-  # --- SYGNAŁY SPRZEDAŻY ---
-  for item in sell_signals[:5]:
+  # --- NAJLEPSZE OKAZJE RYNKOWE Z CAŁEJ GIEŁDY ---
+  # Filtrujemy okazje kupna, które nie są tymi, co już masz (lub pokazujemy ogólnie najlepsze)
+  market_buy_signals = [
+      r
+      for r in buy_signals
+      if r and r["ticker"] not in [pos.upper() for pos in positions.keys()]
+  ]
+
+  for item in market_buy_signals[:4]:
     fields.append({
-        "name": f"🔴 SPRZEDAJ: {item['ticker']}",
+        "name": f"🟢 OKAZJA RYNKOWA: {item['ticker']}",
         "value": f"**Cena:** {item['price']} PLN | **RSI:** {item['rsi']}\n"
+        f"**Sugerowana ilość:** {item['shares']} szt. (~{item['total_cost']}"
+        f" PLN)\n"
         f"**Powód:** {item['reason']}",
         "inline": False,
     })
@@ -427,7 +446,8 @@ def send_discord_report(results, portfolio):
       "embeds": [{
           "title": "📊 SIGG Bot – Megaskaner Rynku i Portfel",
           "description": (
-              f"Pomyślnie przeskanowano **{total_scanned} spółek**."
+              f"Pomyślnie przeskanowano **{total_scanned} spółek** z całej"
+              " giełdy."
           ),
           "color": 3066993,
           "fields": fields,
@@ -440,7 +460,7 @@ def send_discord_report(results, portfolio):
 
 
 if __name__ == "__main__":
-  print("Rozpoczynam gigantyczny skan giełdy i obliczanie portfela...")
+  print("Rozpoczynam gigantyczny skan giełdy i analizę portfela...")
   portfolio = load_portfolio()
   reports = []
   for ticker in TICKERS:
