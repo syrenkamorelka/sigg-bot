@@ -7,18 +7,6 @@ import yfinance as yf
 DISCORD_WEBHOOK_URL = (
     "https://discord.com/api/webhooks/1566471711510102102/vVBXiCEShPkZnQFD84U1PTUYOqm1qR3LeYvQu4YcYfBqI8ZcVo5uWlr2KG-UBjgXCH3B"
 )
-INITIAL_CAPITAL = 20000
-MAX_POSITION_PERCENT = 0.15  # Max 15% budżetu na jedną spółkę (~3000 zł)
-
-PORTFOLIO_FILE = "portfolio.json"
-
-
-def load_portfolio():
-  if os.path.exists(PORTFOLIO_FILE):
-    with open(PORTFOLIO_FILE, "r") as f:
-      return json.load(f)
-  return {"cash": 20000.0, "positions": {}}
-
 
 # Pełna, gigantyczna lista ponad 200 spółek z GPW i NewConnect do skanowania rynku
 TICKERS = [
@@ -325,129 +313,54 @@ def analyze_stock(symbol):
       signal = "SELL"
       reason = f"Przecięcie średnich w dół"
 
-    max_alloc = INITIAL_CAPITAL * MAX_POSITION_PERCENT
-    suggested_shares = int(max_alloc // current_price) if current_price > 0 else 0
-    total_cost = round(suggested_shares * current_price, 2)
-
     return {
         "ticker": symbol.replace(".WA", "").upper(),
         "price": current_price,
         "rsi": rsi,
         "signal": signal,
         "reason": reason,
-        "shares": suggested_shares,
-        "total_cost": total_cost,
     }
   except Exception as e:
     return None
 
 
-def send_discord_report(results, portfolio):
+def send_discord_report(results):
   buy_signals = [r for r in results if r and r["signal"] == "BUY"]
   sell_signals = [r for r in results if r and r["signal"] == "SELL"]
 
   fields = []
 
-  # --- PORTFEL I OCENA TWOICH POZYCJI ---
-  cash = portfolio["cash"]
-  positions = portfolio["positions"]
-
-  total_stocks_value = 0
-  portfolio_details = ""
-  portfolio_sell_alerts = []
-
-  if not positions:
-    portfolio_details = "Brak otwartych pozycji (całość w gotówce)."
-  else:
-    for ticker, data in positions.items():
-      shares = data["shares"]
-      buy_price = data["buy_price"]
-
-      # Szukamy najnowszej ceny z przeskanowanych wyników giełdowych
-      res = next((r for r in results if r["ticker"] == ticker), None)
-      current_price = res["price"] if res else buy_price
-
-      position_value = shares * current_price
-      total_stocks_value += position_value
-
-      profit_loss = (current_price - buy_price) * shares
-      profit_loss_pct = (
-          ((current_price - buy_price) / buy_price) * 100
-          if buy_price > 0
-          else 0
-      )
-
-      emoji = "🟢" if profit_loss >= 0 else "🔴"
-      signal_text = ""
-
-      if res:
-        if res["signal"] == "SELL":
-          signal_text = f" 🚨 **UWAGA (Sprzedaż):** {res['reason']}"
-          portfolio_sell_alerts.append(
-              f"• **{ticker}**: {res['reason']} | Akt: {current_price} PLN"
-          )
-        elif res["signal"] == "BUY":
-          signal_text = f" 💡 *Sygnał dokupienia: {res['reason']}*"
-
-      portfolio_details += (
-          f"**{ticker}**: {shares} szt. | Zakup: {buy_price} PLN | Akt:"
-          f" {current_price} PLN\n{emoji} Wynik: **{profit_loss:+.2f} PLN"
-          f" ({profit_loss_pct:+.2f}%)**{signal_text}\n\n"
-      )
-
-  total_portfolio_value = cash + total_stocks_value
-  total_profit_loss = total_portfolio_value - INITIAL_CAPITAL
-  total_profit_loss_pct = (total_profit_loss / INITIAL_CAPITAL) * 100
-
-  fields.append({
-      "name": "💼 Stan Portfela SIGG",
-      "value": f"💵 **Gotówka:** {cash:,.2f} PLN\n"
-      f"📈 **Wartość akcji:** {total_stocks_value:,.2f} PLN\n"
-      f"💰 **Całkowity kapitał:** {total_portfolio_value:,.2f} PLN\n"
-      f"📊 **Całkowity wynik:** **{total_profit_loss:+,.2f} PLN"
-      f" ({total_profit_loss_pct:+.2f}%)**\n\n"
-      f"**Twoje akcje:**\n{portfolio_details}",
-      "inline": False,
-  })
-
-  # Jeśli coś z Twojego portfela ma sygnał sprzedaży, pokaże się osobny alarm
-  if portfolio_sell_alerts:
+  # --- SYGNAŁY KUPNA ---
+  for item in buy_signals[:6]:
     fields.append({
-        "name": "⚠️ ALARM: Sygnały Sprzedaży na Twoich Akcjach!",
-        "value": "\n".join(portfolio_sell_alerts),
+        "name": f"🟢 KUPUJ: {item['ticker']}",
+        "value": (
+            f"**Cena:** {item['price']} PLN | **RSI:** {item['rsi']}\n**Powód:**"
+            f" {item['reason']}"
+        ),
         "inline": False,
     })
 
-  # --- NAJLEPSZE OKAZJE RYNKOWE Z CAŁEJ GIEŁDY ---
-  # Filtrujemy okazje kupna, które nie są tymi, co już masz (lub pokazujemy ogólnie najlepsze)
-  market_buy_signals = [
-      r
-      for r in buy_signals
-      if r and r["ticker"] not in [pos.upper() for pos in positions.keys()]
-  ]
-
-  for item in market_buy_signals[:4]:
+  # --- SYGNAŁY SPRZEDAŻY ---
+  for item in sell_signals[:6]:
     fields.append({
-        "name": f"🟢 OKAZJA RYNKOWA: {item['ticker']}",
-        "value": f"**Cena:** {item['price']} PLN | **RSI:** {item['rsi']}\n"
-        f"**Sugerowana ilość:** {item['shares']} szt. (~{item['total_cost']}"
-        f" PLN)\n"
-        f"**Powód:** {item['reason']}",
+        "name": f"🔴 SPRZEDAJ: {item['ticker']}",
+        "value": (
+            f"**Cena:** {item['price']} PLN | **RSI:** {item['rsi']}\n**Powód:**"
+            f" {item['reason']}"
+        ),
         "inline": False,
     })
 
   total_scanned = len([r for r in results if r])
 
   payload = {
-      "content": (
-          "@everyone 🚨 Wielki raport giełdowy SIGG (ponad 200 spółek) jest"
-          " już gotowy!"
-      ),
+      "content": "🚨 Nowy raport giełdowy SIGG – Skaner Rynku!",
       "embeds": [{
-          "title": "📊 SIGG Bot – Megaskaner Rynku i Portfel",
+          "title": "📊 SIGG Bot – Megaskaner Rynku GPW",
           "description": (
-              f"Pomyślnie przeskanowano **{total_scanned} spółek** z całej"
-              " giełdy."
+              f"Przeskanowano **{total_scanned} spółek**. Oto najlepsze okazje"
+              " na dziś:"
           ),
           "color": 3066993,
           "fields": fields,
@@ -456,17 +369,15 @@ def send_discord_report(results, portfolio):
   }
 
   requests.post(DISCORD_WEBHOOK_URL, json=payload)
-  print(f"Wysłano raport! Przeskanowano {total_scanned} spółek.")
+  print(f"Wysłano raport skanera! Przeskanowano {total_scanned} spółek.")
 
 
 if __name__ == "__main__":
-  print("Rozpoczynam gigantyczny skan giełdy i analizę portfela...")
-  portfolio = load_portfolio()
+  print("Rozpoczynam gigantyczny skan giełdy...")
   reports = []
   for ticker in TICKERS:
     res = analyze_stock(ticker)
     if res:
       reports.append(res)
 
-  send_discord_report(reports, portfolio)
-
+  send_discord_report(reports)
